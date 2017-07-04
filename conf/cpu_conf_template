@@ -1,0 +1,11 @@
+set terminal png truecolor
+set style data lines
+set title "CPU Load"
+set autoscale
+set grid
+#set ylabel "load percent"
+set xdata time
+set xtics rotate by 90
+set timefmt "%H:%M:%S"
+set output "OUTFILE_CPU"
+plot "INFILE_CPU" using 1:2 title "%user", '' using 1:3 title "%system", '' using 1:4 title "%iowait"

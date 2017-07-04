@@ -1,0 +1,110 @@
+#! /bin/bash
+
+
+set -e
+
+#cat log | grep dev8-16 | awk '{print $1,$11}' > disk.txt
+#cat log | grep all | awk '{print $1,$4,$6,$7,$9}' > cpu.txt
+
+function help {
+    echo "Usage: ./bin/graph_gen -n NAME -f SRCFILE -d DEVID [-o OUTDIR] [-h]"
+    echo "Options:"
+    echo "  -n=NAME    name of current benchmark"
+    echo "  -f=SRCFILE source file that cantains system/benchmark statistics data"
+    echo "  -d=DEVID   device id of disk"
+    echo "  -o=OUTDIR  optional output directory, default is ./result"
+    echo "  -h         help information"
+}
+name=""
+srcfile=""
+outdir="./result"
+devid=""
+
+while getopts "f:d:n:o:h" opt
+do
+    case $opt in
+        f)
+        srcfile=$OPTARG
+        ;;
+        d)
+        devid=$OPTARG
+        ;;
+        n)
+        name=$OPTARG
+        ;;
+        o)
+        outdir=$OPTARG
+        ;;
+        h)
+        help
+        exit 0
+        ;;
+        ?)
+        exit 1
+        ;;
+    esac
+done
+
+if [ -z "$name" ]
+then
+    echo "ERROR: missing option -n"
+    help
+    exit 1
+fi
+if [ -z "$srcfile" ]
+then
+    echo "ERROR: missing option -f"
+    help
+    exit 1
+else
+    if [ ! -f "$srcfile" ] 
+    then
+        echo "ERROR: $srcfile not exists"
+        exit 1
+    fi
+fi
+if [ -z "$devid" ]
+then
+    echo "ERROR: missing option -d"
+    help
+    exit 1
+fi
+
+t=`date +%H%M`
+
+mkdir -p .temp
+rm -f .temp/*
+
+outdir=$outdir/$name"_"$t
+mkdir -p $outdir
+
+cpu_infile=.temp/$name"_cpu_$t.txt"
+disk_infile=.temp/$name"_disk_$t.txt"
+
+cpu_outfile=$outdir/$name"_cpu_"$t.png
+disk_outfile=$outdir/$name"_disk_"$t.png
+
+cpu_conf=.temp/$name"_cpu_"$t.conf
+disk_conf=.temp/$name"_disk_"$t.conf
+
+grep all $srcfile | awk '{print $1,$4,$6,$7,$9}' > $cpu_infile
+grep $devid $srcfile | awk '{print $1,$11}' > $disk_infile
+
+cp conf/cpu_conf_template $cpu_conf
+cp conf/disk_conf_template $disk_conf
+sed -i "s#INFILE_CPU#$cpu_infile#g" $cpu_conf
+sed -i "s#INFILE_DISK#$disk_infile#g" $disk_conf
+sed -i "s#OUTFILE_CPU#$cpu_outfile#g" $cpu_conf
+sed -i "s#OUTFILE_DISK#$disk_outfile#g" $disk_conf
+
+gnuplot $cpu_conf
+gnuplot $disk_conf
+
+if [ $? -eq 0 ]
+then
+    echo "INFO: result output to $outdir"
+else
+    echo "ERROR: error occured"
+fi
+
+
