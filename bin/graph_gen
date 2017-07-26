@@ -1,10 +1,6 @@
 #! /bin/bash
 
-
 set -e
-
-#cat log | grep dev8-16 | awk '{print $1,$11}' > disk.txt
-#cat log | grep all | awk '{print $1,$4,$6,$7,$9}' > cpu.txt
 
 function help {
     echo "Usage: ./bin/graph_gen -n NAME -f SRCFILE -d DEVID [-o OUTDIR] [-h]"
@@ -15,6 +11,7 @@ function help {
     echo "  -o=OUTDIR  optional output directory, default is ./result"
     echo "  -h         help information"
 }
+
 name=""
 srcfile=""
 outdir="./result"
@@ -78,27 +75,36 @@ rm -f .temp/*
 outdir=$outdir/$name"_"$t
 mkdir -p $outdir
 
-cpu_infile=.temp/$name"_cpu_$t.txt"
-disk_infile=.temp/$name"_disk_$t.txt"
+cpu_infile=./.temp/$name"_cpu_$t.txt"
+disk_util_infile=./.temp/$name"_disk_util_$t.txt"
+disk_tps_infile=./.temp/$name"_disk_tps_$t.txt"
 
 cpu_outfile=$outdir/$name"_cpu_"$t.png
-disk_outfile=$outdir/$name"_disk_"$t.png
+disk_util_outfile=$outdir/$name"_disk_util_"$t.png
+disk_tps_outfile=$outdir/$name"_disk_tps_"$t.png
 
-cpu_conf=.temp/$name"_cpu_"$t.conf
-disk_conf=.temp/$name"_disk_"$t.conf
+cpu_conf=./.temp/$name"_cpu_"$t.conf
+disk_util_conf=./.temp/$name"_disk_util_"$t.conf
+disk_tps_conf=./.temp/$name"_disk_tps_"$t.conf
 
 grep all $srcfile | awk '{print $1,$4,$6,$7,$9}' > $cpu_infile
-grep $devid $srcfile | awk '{print $1,$11}' > $disk_infile
+grep $devid $srcfile | awk '{print $1,$11}' > $disk_util_infile
+grep $devid $srcfile | awk '{print $1,$4}' > $disk_tps_infile
 
 cp conf/cpu_conf_template $cpu_conf
-cp conf/disk_conf_template $disk_conf
-sed -i "s#INFILE_CPU#$cpu_infile#g" $cpu_conf
-sed -i "s#INFILE_DISK#$disk_infile#g" $disk_conf
-sed -i "s#OUTFILE_CPU#$cpu_outfile#g" $cpu_conf
-sed -i "s#OUTFILE_DISK#$disk_outfile#g" $disk_conf
+cp conf/disk_util_conf_template $disk_util_conf
+cp conf/disk_tps_conf_template $disk_tps_conf
+
+sed -i "s#INFILE#$cpu_infile#g" $cpu_conf
+sed -i "s#OUTFILE#$cpu_outfile#g" $cpu_conf
+sed -i "s#INFILE#$disk_util_infile#g" $disk_util_conf
+sed -i "s#OUTFILE#$disk_util_outfile#g" $disk_util_conf
+sed -i "s#INFILE#$disk_tps_infile#g" $disk_tps_conf
+sed -i "s#OUTFILE#$disk_tps_outfile#g" $disk_tps_conf
 
 gnuplot $cpu_conf
-gnuplot $disk_conf
+gnuplot $disk_util_conf
+gnuplot $disk_tps_conf
 
 if [ $? -eq 0 ]
 then

@@ -3,9 +3,9 @@ set style data lines
 set title "Disk Load"
 set autoscale
 set grid
-#set ylabel "load percent"
+#set ylabel "%load"
 set xdata time
 set timefmt "%H:%M:%S"
 set xtics rotate by 90
-set output "OUTFILE_DISK"
-plot "INFILE_DISK" using 1:2 title "%util"
+set output "OUTFILE"
+plot "INFILE" using 1:2 title "%util"

@@ -1,0 +1,11 @@
+set terminal png truecolor
+set style data lines
+set title "Disk TPS"
+set autoscale
+set grid
+#set ylabel "tps"
+set xdata time
+set timefmt "%H:%M:%S"
+set xtics rotate by 90
+set output "OUTFILE"
+plot "INFILE" using 1:2 title "tps"
